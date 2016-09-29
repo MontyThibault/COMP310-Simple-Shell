@@ -1,0 +1,9 @@
+#include <stdio.h>
+#include "history.h"
+
+int main(int argc, char *argv[]) {
+	// hist_add(argv);
+	printf("hey");
+
+	return 0;		
+}
