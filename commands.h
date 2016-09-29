@@ -8,6 +8,7 @@
 struct cmd_simple {
 	char args[ARG_ARRAY_LENGTH][ARG_BUFFER_SIZE];
 	int len;
+	int bg;
 };
 
 struct cmd_compound {
@@ -37,6 +38,8 @@ struct cmd_simple *cmd_extract_snd(struct cmd_compound *cmd);
 
 char *cmd_extract_arg_at(struct cmd_simple *cmd, int index);
 char *cmd_extract_program(struct cmd_simple *cmd);
+
+void cmd_append_arg(struct cmd_simple *cmd, char *arg);
 
 void cmd_copy_from_ptr_arr(struct cmd_simple *cmd, char *arr[], int len);
 void cmd_generate_ptr_arr(struct cmd_simple *cmd, char *arr[]);

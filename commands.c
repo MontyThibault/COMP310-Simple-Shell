@@ -19,6 +19,12 @@ char *cmd_extract_program(struct cmd_simple *cmd) {
 	return cmd_extract_arg_at(cmd, 0);
 }
 
+void cmd_append_arg(struct cmd_simple *cmd, char *arg) {
+	char *copy_to = cmd_extract_arg_at(cmd, (*cmd).len);
+	strcpy(copy_to, arg);
+	(*cmd).len++;
+}
+
 // Writes strings to the internal string buffer from an array of char*'s.
 void cmd_copy_from_ptr_arr(struct cmd_simple *cmd, char *arr[], int len) {
 	(*cmd).len = len;

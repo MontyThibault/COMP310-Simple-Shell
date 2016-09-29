@@ -19,6 +19,6 @@ struct automaton_state match_command(struct automaton_state state);
 
 // The following matches entire inputs (and are really the only module exports)
 struct automaton_state match_full_simple(struct automaton_state state);
-struct automaton_state match_full_compound(struct automaton_state state, char *delimeter);
+struct automaton_state match_full_compound(struct automaton_state state, char *delimeter, enum cmd_type out_type);
 struct automaton_state match_full_pipe(struct automaton_state state);
 struct automaton_state match_full_redirect(struct automaton_state state);

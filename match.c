@@ -1,4 +1,5 @@
 #include <string.h>
+#include "commands.h"
 #include "match.h"
 
 struct automaton_state match_end_of_input(struct automaton_state state) {
@@ -26,9 +27,9 @@ struct automaton_state match_one_or_more(struct automaton_state state, AUTOMATON
 	struct automaton_state a = state;
 	struct automaton_state b = f(a);
 
-	// Returned a failed automaton_state if one match failed
 	if(b.acceptance_state == t_failed) {
-		return b;
+		state.acceptance_state = t_failed;
+		return state;
 	}
 	
 	while(b.acceptance_state == t_accepting) {
@@ -43,8 +44,6 @@ struct automaton_state match_const_token(struct automaton_state state, char *tok
 	char *current_string = *(state.current);
 
 	if(strcmp(current_string, token) != 0) {
-		state.acceptance_state &= t_accepting;
-	} else {
 		state.acceptance_state = t_failed;
 	}
 
@@ -54,11 +53,9 @@ struct automaton_state match_const_token(struct automaton_state state, char *tok
 }
 
 struct automaton_state match_ampersand(struct automaton_state state) {
-	struct automaton_state out = match_const_token(state, '&');
+	struct automaton_state out = match_const_token(state, "&");
 
-	if(out.acceptance_state == t_accepted) {
-		state.cmd.value.u_simple.cmd.bg = 1;
-	}
+	state.cmd.value.u_simple.bg = 1;
 
 	return out;
 }
@@ -89,11 +86,11 @@ struct automaton_state match_command(struct automaton_state state) {
 	return match_one_or_more(state, match_argument);
 }
 
-struct match_full_simple(struct automaton_state state) {
+struct automaton_state match_full_simple(struct automaton_state state) {
 	return match_end(match_command(state));
 }
 
-struct match_full_compound(struct automaton_state state, char *delimeter) {	
+struct automaton_state match_full_compound(struct automaton_state state, char *delimeter, enum cmd_type out_type) {	
 
 	state = match_command(state);
 	struct cmd_simple cmd1 = state.cmd.value.u_simple;	
@@ -105,6 +102,7 @@ struct match_full_compound(struct automaton_state state, char *delimeter) {
 
 	state =  match_end_of_input(state);
 
+	state.cmd.type = out_type;
 	state.cmd.value.u_compound.cmd1 = cmd1;
 	state.cmd.value.u_compound.cmd2 = cmd2;
 
@@ -112,9 +110,9 @@ struct match_full_compound(struct automaton_state state, char *delimeter) {
 }
 
 struct automaton_state match_pipe(struct automaton_state state) {
-	return match_full_compound(state, "|");
+	return match_full_compound(state, "|", t_pipe);
 }
 
 struct automaton_state match_redirect(struct automaton_state state) {
-	return match_full_compound(state, ">");
+	return match_full_compound(state, ">", t_redirect);
 }

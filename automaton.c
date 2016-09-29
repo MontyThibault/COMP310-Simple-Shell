@@ -3,29 +3,13 @@
 struct automaton_state automaton_new(char *args[]) {
 	struct automaton_state r;
 
-	r.acceptance_state = t_unknown;
+	r.acceptance_state = t_accepting;
 	r.args = args;
-	r.current = &args[0];	
+	r.current = args;	
 
 	return r;
 }
 
-int automaton_accepting(struct automaton_state *state) {
-	if((*state).acceptance_state == t_accepting) {
-		return 1;
-	}
-
-	return 0;
-}
-
-int automaton_failed(struct automaton_state *state) {
-	if((*state).acceptance_state == t_failed) {
-		return 1;
-	}
-
-	return 0;
-}
-
-struct automaton_state automaton_match(struct automaton_state state, AUTOMATON_MATCH_F f) {
-	return f(state);
+void automaton_advance(struct automaton_state *state) {
+	(*state).current += sizeof(char *);
 }

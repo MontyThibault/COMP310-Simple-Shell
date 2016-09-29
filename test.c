@@ -5,6 +5,7 @@
 #include "commands.h"
 #include "history.h"
 #include "automaton.h"
+#include "match.h"
 
 
 int tests_run = 0;
@@ -41,14 +42,27 @@ char *test_history() {
 	return 0;
 }
 
-char *test_automaton() {
+char *test_match_simple() {
+
+	char *argv[] = { "gcc", "-o", "myfile.c" };
+	int argc = 3;
+
+	struct automaton_state state = automaton_new(argv);
+
+	state = match_full_simple(state);
+
+	mu_assert("Simple command did not match", state.acceptance_state == t_accepting);
+	mu_assert("First argument does not match",
+		strcmp(cmd_extract_arg_at(&state.cmd.value.u_simple, 0), argv[0]) == 0);
+	mu_assert("Args length do not match", state.cmd.value.u_simple.len == argc);
+
 	return 0;
 }
 
 char *all_tests() {
 	mu_run_test(test_create_command);
 	mu_run_test(test_history);
-	mu_run_test(test_automaton);
+	mu_run_test(test_match_simple);
 
 	return 0;
 }

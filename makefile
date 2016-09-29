@@ -20,8 +20,8 @@ automaton.o: automaton.c automaton.h commands.h
 match.o: match.h history.h
 	gcc $(flags) -c match.c 
 
-test: automaton.o history.o commands.o execute.o parse.o test.c
-	gcc $(flags) test.c history.o commands.o execute.o parse.o -o test
+test: automaton.o match.o history.o commands.o execute.o parse.o test.c
+	gcc $(flags) test.c automaton.o match.o history.o commands.o execute.o parse.o -o test
 
 minunit.o: minunit.h
 	gcc $(flags) -c minunit.h 
