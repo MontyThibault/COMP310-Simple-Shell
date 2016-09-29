@@ -1,22 +1,24 @@
-flags = -g -std=c99
-
+flags = -g
 
 all: test shell
 
 commands.o: commands.c commands.h
 	gcc $(flags) -c commands.c
 
-history.o: history.c history.h commands.o
-	gcc $(flags) -c history.c commands.o
+history.o: history.c history.h commands.h
+	gcc $(flags) -c history.c 
 
-execute.o: execute.c execute.h commands.o
-	gcc $(flags) -c execute.c commands.o
+execute.o: execute.c execute.h commands.h
+	gcc $(flags) -c execute.c 
 
-parse.o: parse.c parse.h commands.o
-	gcc $(flags) -c parse.c commands.o
+parse.o: parse.c parse.h commands.h
+	gcc $(flags) -c parse.c 
 
-automaton.o: automaton.c automaton.h commands.o
-	gcc $(flags) -c automaton.c commands.o
+automaton.o: automaton.c automaton.h commands.h
+	gcc $(flags) -c automaton.c 
+
+match.o: match.h history.h
+	gcc $(flags) -c match.c 
 
 test: automaton.o history.o commands.o execute.o parse.o test.c
 	gcc $(flags) test.c history.o commands.o execute.o parse.o -o test

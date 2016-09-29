@@ -16,10 +16,10 @@ char *test_create_command() {
 	int argc = 2;
 	
 	struct cmd_tagged_union cmd_tagged_union;
-	cmd_tagged_union.type = u_simple;
+	cmd_tagged_union.type = t_simple;
 
-	struct cmd_simple *cmd = cmd_tagged_union.value.u_simple;
-	cmd_copy_from_ptr_arr(cmd, argv, argc);
+	struct cmd_simple cmd = cmd_tagged_union.value.u_simple;
+	cmd_copy_from_ptr_arr(&cmd, argv, argc);
 
 	return 0;
 }
