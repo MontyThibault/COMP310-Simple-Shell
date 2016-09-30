@@ -1,12 +1,38 @@
+#include <stdio.h>
+#include "commands.h"
 #include "history.h"
+#include "automaton.h"
+#include "match.h"
+#include "execute.h"
 #include "parse.h"
 
 
 int main(int argc, char *argv[]) {
 
-	return 0;
+	char *args[ARG_ARRAY_LENGTH];
 
-//
+	while(1) {
+		int len = getcmd("\n>> ", args);
+
+		struct automaton_state state = automaton_new(args);	
+
+		if(match_end_of_input(state).acceptance_state == t_accepting) {
+			continue;
+		}
+
+		state = match_full_generic(state);
+
+		if(state.acceptance_state == t_failed) {
+			printf("Malformed input");
+			continue;
+		}
+	
+		execute_generic(&state.cmd);	
+		hist_add(state.cmd);
+	}
+
+	return 0;
+	
 //	char *args[20];
 //	int bg;
 //	while(1) {

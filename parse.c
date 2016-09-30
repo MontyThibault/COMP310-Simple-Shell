@@ -12,7 +12,7 @@
 // properly so that your shell works without leaking memory.
 //
 
-int getcmd(char *prompt, char *args[], int *background) {
+int getcmd(char *prompt, char *args[] /*, int *background */) {
 
 	// memset(args, 0, 20);
 
@@ -29,12 +29,12 @@ int getcmd(char *prompt, char *args[], int *background) {
 	}
 
 	// Check if background is specified..
-	if ((loc = index(line, '&')) != NULL) {
-		*background = 1;
-		*loc = ' ';
-	} else {
-		*background = 0;
-	}
+//	if ((loc = index(line, '&')) != NULL) {
+//		*background = 1;
+//		*loc = ' ';
+//	} else {
+//		*background = 0;
+//	}
 
 	while ((token = strsep(&line, " \t\n")) != NULL) {
 		for (int j = 0; j < strlen(token); j++) {
@@ -46,6 +46,8 @@ int getcmd(char *prompt, char *args[], int *background) {
 			args[i++] = token;
 		}
 	}
+
+	args[i] = "\0";
 
 	return i;
 }

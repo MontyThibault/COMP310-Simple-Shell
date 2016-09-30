@@ -1,9 +1,11 @@
 #include <string.h>
+#include <stdio.h>
 #include "commands.h"
 #include "match.h"
+#include "history.h"
 
 struct automaton_state match_end_of_input(struct automaton_state state) {
-	if(**(state.current) != '\1') {
+	if(**(state.current) != '\0') {
 		state.acceptance_state = t_failed;
 	}
 
@@ -66,12 +68,24 @@ struct automaton_state match_end(struct automaton_state state) {
 }
 
 struct automaton_state match_argument(struct automaton_state state) {
-	char *arg = *(state.current);
 
 	// Santitize arg to make sure it contains alpha-numeric characters, not longer than
 	// ARG_LENGTH, etc.
 
-	cmd_append_arg(&state.cmd.value.u_simple, arg);
+	struct automaton_state failure_conditions[3];
+
+	if(match_end_of_input(state).acceptance_state == t_accepting) {
+		state.acceptance_state = t_failed;
+		return state;
+	}
+
+	if(match_const_token(state, "&").acceptance_state == t_accepting
+	|| match_const_token(state, "|").acceptance_state == t_accepting) {
+		state.acceptance_state = t_failed;
+		return state;
+	}
+
+	cmd_append_arg(&state.cmd.value.u_simple, *(state.current));
 	automaton_advance(&state);
 
 	return state;
@@ -84,6 +98,28 @@ struct automaton_state match_command(struct automaton_state state) {
 	state.cmd.value.u_simple.bg = 0;
 	
 	return match_one_or_more(state, match_argument);
+}
+
+struct automaton_state match_history(struct automaton_state state) {
+	
+	char *arg = *state.current;
+	int hist_number;
+
+	// I should have just used this the whole time instead of the automaton business.
+	// That would have been SO MUCH easier.
+	if(sscanf(arg, "!%d", &hist_number) == 1) {
+		state.cmd = *hist_fetch(hist_number);
+	} else {
+		state.acceptance_state = t_failed;
+	}
+
+	automaton_advance(&state);
+
+	return state;
+}
+
+struct automaton_state match_full_history(struct automaton_state state) {
+	return match_end_of_input(match_history(state));
 }
 
 struct automaton_state match_full_simple(struct automaton_state state) {
@@ -109,10 +145,36 @@ struct automaton_state match_full_compound(struct automaton_state state, char *d
 	return state;
 }
 
-struct automaton_state match_pipe(struct automaton_state state) {
+struct automaton_state match_full_pipe(struct automaton_state state) {
 	return match_full_compound(state, "|", t_pipe);
 }
 
-struct automaton_state match_redirect(struct automaton_state state) {
+struct automaton_state match_full_redirect(struct automaton_state state) {
 	return match_full_compound(state, ">", t_redirect);
+}
+
+struct automaton_state match_full_generic(struct automaton_state state) {
+
+	struct automaton_state after_matching;
+
+	// Empty?
+
+	if((after_matching = match_full_history(state)).acceptance_state == t_accepting) {
+		return after_matching;
+	}
+
+	if((after_matching = match_full_simple(state)).acceptance_state == t_accepting) {
+		return after_matching;
+	}
+
+	if((after_matching = match_full_pipe(state)).acceptance_state == t_accepting) {
+		return after_matching;
+	}
+
+	if((after_matching = match_full_redirect(state)).acceptance_state == t_accepting) {
+		return after_matching;
+	}
+	
+	// Return failed state
+	return after_matching;
 }

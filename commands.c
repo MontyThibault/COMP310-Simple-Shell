@@ -34,6 +34,9 @@ void cmd_copy_from_ptr_arr(struct cmd_simple *cmd, char *arr[], int len) {
 		char *arg = cmd_extract_arg_at(cmd, i);	
 		strcpy(arg, arr[i]);
 	}
+
+	char *arg = cmd_extract_arg_at(cmd, len);
+	*arg = '\0';
 }
 
 

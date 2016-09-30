@@ -13,7 +13,7 @@ int tests_run = 0;
 
 char *test_create_command() {
 	
-	char *argv[] = { "hello", "world" };
+	char *argv[] = { "hello", "world", "\0" };
 	int argc = 2;
 	
 	struct cmd_tagged_union cmd_tagged_union;
@@ -44,7 +44,7 @@ char *test_history() {
 
 char *test_match_simple() {
 
-	char *argv[] = { "gcc", "-o", "myfile.c" };
+	char *argv[] = { "gcc", "-o", "myfile.c", "\0" };
 	int argc = 3;
 
 	struct automaton_state state = automaton_new(argv);
@@ -59,10 +59,30 @@ char *test_match_simple() {
 	return 0;
 }
 
+char *test_match_compound() {
+
+	char *argv[] = { "gcc", "-o", "myfile.c", "|", "hello", "world", "\0" };
+	int argc = 3;
+
+	struct automaton_state state = automaton_new(argv);
+
+	state = match_full_pipe(state);
+
+	mu_assert("Pipe command did not match", state.acceptance_state == t_accepting);
+	mu_assert("First argument of first command does not match",
+		strcmp(cmd_extract_arg_at(&state.cmd.value.u_compound.cmd1, 0), "gcc") == 0);
+	mu_assert("First argument of second command does not match",
+		strcmp(cmd_extract_arg_at(&state.cmd.value.u_compound.cmd2, 0), "hello") == 0);
+	mu_assert("cmd2 args length do not match", state.cmd.value.u_compound.cmd2.len == 2);
+
+	return 0;
+}
+
 char *all_tests() {
 	mu_run_test(test_create_command);
 	mu_run_test(test_history);
 	mu_run_test(test_match_simple);
+	mu_run_test(test_match_compound);
 
 	return 0;
 }
