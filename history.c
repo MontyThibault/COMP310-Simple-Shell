@@ -1,5 +1,7 @@
 #include "history.h"
+#include "commands.h"
 #include <string.h>
+#include <stdio.h>
 
 struct cmd_tagged_union _hist[HIST_SIZE];
 int _cmd_counter = 0;
@@ -41,3 +43,15 @@ struct cmd_tagged_union *hist_fetch(int cmd_num) {
 	return &_hist[_arr_index(cmd_num)];
 }
 
+void hist_print() {
+
+	for(int i = _cmd_counter - (HIST_SIZE + 1); i <= _cmd_counter; i++) {
+
+		if(i <= 0) {
+			continue;
+		}
+
+		struct cmd_tagged_union *cmd = hist_fetch(i);
+		printf("%d %s", i, (*cmd).stdin_string);
+	}
+}

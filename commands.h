@@ -1,6 +1,6 @@
 #define ARG_ARRAY_LENGTH 20
 #define ARG_BUFFER_SIZE 20
-
+#define STDIN_BUFFER_SIZE 200
 
 #ifndef INCLUDE_COMMAND
 #define INCLUDE_COMMAND
@@ -29,6 +29,7 @@ union cmd_union {
 
 struct cmd_tagged_union {
 	enum cmd_type type;
+	char stdin_string[STDIN_BUFFER_SIZE];
 	union cmd_union value;
 };
 

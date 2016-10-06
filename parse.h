@@ -1,1 +1,1 @@
-int getcmd(char *prompt, char *args[]);
+int getcmd(char *prompt, char *args[], char *stdin_string);

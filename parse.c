@@ -12,7 +12,7 @@
 // properly so that your shell works without leaking memory.
 //
 
-int getcmd(char *prompt, char *args[] /*, int *background */) {
+int getcmd(char *prompt, char *args[], char *stdin_string /*, int *background */) {
 
 	// memset(args, 0, 20);
 
@@ -27,6 +27,8 @@ int getcmd(char *prompt, char *args[] /*, int *background */) {
 	if (length <= 0) {
 		exit(-1);
 	}
+
+	strcpy(stdin_string, line);
 
 	// Check if background is specified..
 //	if ((loc = index(line, '&')) != NULL) {

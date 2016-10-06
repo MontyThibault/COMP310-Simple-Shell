@@ -4,3 +4,4 @@
 
 void hist_add(struct cmd_tagged_union cmd);
 struct cmd_tagged_union *hist_fetch(int cmd_num);
+void hist_print();
