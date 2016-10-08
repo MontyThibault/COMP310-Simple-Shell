@@ -72,26 +72,34 @@ void execute_cmd_pipe(struct cmd_compound *cmd) {
 	int pipefd[2];
 	pipe(pipefd);
 
+	int old_stdin = dup(0),
+	    old_stdout = dup(1);
+
 	int pid1 = fork();
 
 	if(pid1 == 0) {
+		close(pipefd[0]);
 		_overwrite_stdout(pipefd[1]);
-		// close(pipefd[0]);
 		_branch_cmd_simple(&(*cmd).cmd1);
 
 	} else {
 		int pid2 = fork();
 
 		if(pid2 == 0) {
+			close(pipefd[1]);
 			_overwrite_stdin(pipefd[0]);
-			// close(pipefd[1]);
 			_branch_cmd_simple(&(*cmd).cmd2);
 
 		} else {
 
+			close(pipefd[0]);
+			close(pipefd[1]);
+
 			int status;
+
+			// Once the first process ends, kill the second
 			waitpid(pid1, &status, 0);
-			kill(pid2, SIGTERM);
+			// kill(pid2, SIGTERM);
 			waitpid(pid2, &status, 0);
 
 			close(0);

@@ -1,6 +1,6 @@
 #include "commands.h"
 
-#define HIST_SIZE 10
+#define HIST_SIZE 11
 
 void hist_add(struct cmd_tagged_union cmd);
 struct cmd_tagged_union *hist_fetch(int cmd_num);

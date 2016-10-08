@@ -105,10 +105,16 @@ struct automaton_state match_history(struct automaton_state state) {
 	char *arg = *state.current;
 	int hist_number;
 
-	// I should have just used this the whole time instead of the automaton business.
-	// That would have been SO MUCH easier.
+	// I should have just used this the whole time.
 	if(sscanf(arg, "!%d", &hist_number) == 1) {
-		state.cmd = *hist_fetch(hist_number);
+
+		struct cmd_tagged_union *ptr = hist_fetch(hist_number);
+
+		if(ptr == 0) {
+			state.acceptance_state = t_failed;
+		} else {
+			state.cmd = *ptr;
+		}
 	} else {
 		state.acceptance_state = t_failed;
 	}

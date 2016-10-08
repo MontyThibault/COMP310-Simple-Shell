@@ -19,7 +19,7 @@ int _cmd_in_memory(int cmd_num) {
 	if(cmd_num < 1)
 		return 0;
 
-	if(_cmd_counter - cmd_num >= 10)
+	if(_cmd_counter - cmd_num >= HIST_SIZE)
 		return 0;
 
 	return 1;	
@@ -45,9 +45,11 @@ struct cmd_tagged_union *hist_fetch(int cmd_num) {
 
 void hist_print() {
 
-	for(int i = _cmd_counter - (HIST_SIZE + 1); i <= _cmd_counter; i++) {
+	printf("%s\n", "Command history:");
 
-		if(i <= 0) {
+	for(int i = _cmd_counter - (HIST_SIZE - 2); i <= _cmd_counter; i++) {
+
+		if(_cmd_in_memory(i) == 0) {
 			continue;
 		}
 
