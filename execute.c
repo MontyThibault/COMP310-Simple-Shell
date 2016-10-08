@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <pthread.h>
 
 #include "execute.h"
 #include "commands.h"
 #include "builtin.h"
+#include "jobs.h"
 
 
 void execute_generic(struct cmd_tagged_union *tagged_union) {
@@ -36,9 +38,24 @@ void _branch_cmd_simple(struct cmd_simple *cmd) {
 
 	execvp(program_name, args);
 
-	// This thread only continues running if execvp failed.
 	printf("Invalid command name");
 	exit(0);
+}
+
+struct _waiting_thread_args {
+	int pid;
+	struct cmd_simple *cmd;
+};
+
+void *_spawn_waiting_thread(void *args) {
+	struct _waiting_thread_args *good_args_ptr = (struct _waiting_thread_args*) args;
+	struct _waiting_thread_args good_args = *good_args_ptr;
+
+	int status;
+	waitpid(good_args.pid, &status, 0);
+
+	remove_job_by_cmd(good_args.cmd);
+	free(good_args_ptr);
 }
 
 void execute_cmd_simple(struct cmd_simple *cmd) {
@@ -56,12 +73,34 @@ void execute_cmd_simple(struct cmd_simple *cmd) {
 	if(pid == 0) {
 		_branch_cmd_simple(cmd);
 	}
+	
 
 	if((*cmd).bg == 0) {
 		int status;
 		waitpid(pid, &status, 0);
 	} else {
+
 		// Add pid to current jobs list
+		int index = add_job(*cmd);
+		
+		if(index == -1) {
+			printf("Error: jobs array full!");
+			return;
+		}
+
+		// On job die, remove it
+		// We have a special thread that waits just for this job.
+		// This has to be a thread and not a process because it
+		// modifies OUR jobs array.
+		
+		// The arguments must be heap-allocated, since we aren't bound to this stack anymore
+		struct _waiting_thread_args *args = (struct _waiting_thread_args*) malloc(sizeof(struct _waiting_thread_args));
+		(*args).pid = pid;
+		(*args).cmd = cmd;
+
+		pthread_t thread;
+		pthread_create(&thread, 0, &_spawn_waiting_thread, (void*) args);
+		pthread_detach(thread);
 	}
 }
 

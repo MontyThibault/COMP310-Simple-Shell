@@ -7,6 +7,7 @@
 
 #include "builtin.h"
 #include "history.h"
+#include "jobs.h"
 
 
 void builtin_history() {
@@ -67,12 +68,17 @@ int builtin_match_and_run(char *program_name, char *args[]) {
 	}
 
 	if(strcmp(program_name, "jobs") == 0) {
-		builtin_jobs();
+		print_jobs();
 		return 1;
 	}
 
 	if(strcmp(program_name, "fg") == 0) {
-		builtin_fg();
+		int job_number;
+		if(sscanf(args[1], "%d", &job_number) == 0)
+			printf("Invalid argument to fd");
+		else
+			foreground_job(job_number);
+
 		return 1;
 	}
 

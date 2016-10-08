@@ -57,7 +57,7 @@ struct automaton_state match_const_token(struct automaton_state state, char *tok
 struct automaton_state match_ampersand(struct automaton_state state) {
 	struct automaton_state out = match_const_token(state, "&");
 
-	state.cmd.value.u_simple.bg = 1;
+	out.cmd.value.u_simple.bg = 1;
 
 	return out;
 }
@@ -72,7 +72,6 @@ struct automaton_state match_argument(struct automaton_state state) {
 	// Santitize arg to make sure it contains alpha-numeric characters, not longer than
 	// ARG_LENGTH, etc.
 
-	struct automaton_state failure_conditions[3];
 
 	if(match_end_of_input(state).acceptance_state == t_accepting) {
 		state.acceptance_state = t_failed;
