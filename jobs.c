@@ -21,6 +21,7 @@ int add_job(struct cmd_simple cmd) {
 
 void remove_job_by_cmd(struct cmd_simple *cmd) {
 	for(int i = 0; i <= job_counter; i++) {
+	
 		if(memcmp(&jobs_array[i], cmd, sizeof(struct cmd_simple)) == 0) {
 			remove_job_by_index(i);
 			break;

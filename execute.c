@@ -44,7 +44,7 @@ void _branch_cmd_simple(struct cmd_simple *cmd) {
 
 struct _waiting_thread_args {
 	int pid;
-	struct cmd_simple *cmd;
+	struct cmd_simple cmd;
 };
 
 void *_spawn_waiting_thread(void *args) {
@@ -54,7 +54,9 @@ void *_spawn_waiting_thread(void *args) {
 	int status;
 	waitpid(good_args.pid, &status, 0);
 
-	remove_job_by_cmd(good_args.cmd);
+	printf("Job %s terminated", cmd_extract_program(&good_args.cmd));
+
+	remove_job_by_cmd(&good_args.cmd);
 	free(good_args_ptr);
 }
 
@@ -96,7 +98,7 @@ void execute_cmd_simple(struct cmd_simple *cmd) {
 		// The arguments must be heap-allocated, since we aren't bound to this stack anymore
 		struct _waiting_thread_args *args = (struct _waiting_thread_args*) malloc(sizeof(struct _waiting_thread_args));
 		(*args).pid = pid;
-		(*args).cmd = cmd;
+		(*args).cmd = *cmd;
 
 		pthread_t thread;
 		pthread_create(&thread, 0, &_spawn_waiting_thread, (void*) args);
