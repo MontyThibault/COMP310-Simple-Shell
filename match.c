@@ -80,7 +80,8 @@ struct automaton_state match_argument(struct automaton_state state) {
 	}
 
 	if(match_const_token(state, "&").acceptance_state == t_accepting
-	|| match_const_token(state, "|").acceptance_state == t_accepting) {
+	|| match_const_token(state, "|").acceptance_state == t_accepting
+	|| match_const_token(state, ">").acceptance_state == t_accepting) {
 		state.acceptance_state = t_failed;
 		return state;
 	}

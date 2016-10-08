@@ -32,8 +32,9 @@ void builtin_cd(char *args[]) {
 }
 
 void builtin_exit() {
-	pid_t parent_pid = getppid();
-	kill(parent_pid, SIGTERM);
+	// pid_t parent_pid = getppid();
+	// kill(parent_pid, SIGTERM);
+	exit(0);
 }
 
 void builtin_jobs() {

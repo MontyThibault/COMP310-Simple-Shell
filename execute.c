@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #include "execute.h"
 #include "commands.h"
@@ -28,14 +29,10 @@ void execute_generic(struct cmd_tagged_union *tagged_union) {
 }
 
 void _branch_cmd_simple(struct cmd_simple *cmd) {
-	
+
 	char *args[ARG_ARRAY_LENGTH + 1];
 	cmd_generate_ptr_arr(cmd, args);
 	char *program_name = cmd_extract_program(cmd);
-
-	if(builtin_match_and_run(program_name, args)) {
-		exit(0);
-	}
 
 	execvp(program_name, args);
 
@@ -46,6 +43,14 @@ void _branch_cmd_simple(struct cmd_simple *cmd) {
 
 void execute_cmd_simple(struct cmd_simple *cmd) {
 
+	char *args[ARG_ARRAY_LENGTH + 1];
+	cmd_generate_ptr_arr(cmd, args);
+	char *program_name = cmd_extract_program(cmd);
+
+	if(builtin_match_and_run(program_name, args)) {
+		return;
+	}
+
 	int pid = fork();
 	
 	if(pid == 0) {
@@ -55,6 +60,8 @@ void execute_cmd_simple(struct cmd_simple *cmd) {
 	if((*cmd).bg == 0) {
 		int status;
 		waitpid(pid, &status, 0);
+	} else {
+		// Add pid to current jobs list
 	}
 }
 
@@ -113,5 +120,16 @@ void execute_cmd_pipe(struct cmd_compound *cmd) {
 
 
 void execute_cmd_redirect(struct cmd_compound *cmd) {
-	printf("redirect");
+
+	char *program_name = cmd_extract_program(&(*cmd).cmd2);
+	int file = open(program_name, O_WRONLY);
+	
+	int pid = fork();
+
+	if(pid == 0) {
+		_overwrite_stdout(file);
+		_branch_cmd_simple(&(*cmd).cmd1);
+	}
+	
+	close(file);
 }
