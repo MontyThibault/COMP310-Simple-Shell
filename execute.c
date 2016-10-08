@@ -10,6 +10,15 @@
 #include "builtin.h"
 #include "jobs.h"
 
+void _overwrite_stdout(int fd) {
+	close(1);
+	dup(fd);
+}
+
+void _overwrite_stdin(int fd) {
+	close(0);
+	dup(fd);
+}
 
 void execute_generic(struct cmd_tagged_union *tagged_union) {
 
@@ -42,22 +51,17 @@ void _branch_cmd_simple(struct cmd_simple *cmd) {
 	exit(0);
 }
 
-struct _waiting_thread_args {
-	int pid;
-	struct cmd_simple cmd;
-};
-
-void *_spawn_waiting_thread(void *args) {
-	struct _waiting_thread_args *good_args_ptr = (struct _waiting_thread_args*) args;
-	struct _waiting_thread_args good_args = *good_args_ptr;
+void *_spawn_waiting_thread(void *cmd_heap) {
+	struct cmd_simple *cmd_ptr = (struct cmd_simple*) cmd_heap;
+	struct cmd_simple cmd = *cmd_ptr;
 
 	int status;
-	waitpid(good_args.pid, &status, 0);
+	waitpid(cmd.pid, &status, 0);
 
-	printf("Job %s terminated", cmd_extract_program(&good_args.cmd));
+	printf("(Job %s exited)\n", cmd_extract_program(&cmd));
 
-	remove_job_by_cmd(&good_args.cmd);
-	free(good_args_ptr);
+	remove_job_by_cmd(&cmd);
+	free(cmd_ptr);
 }
 
 void execute_cmd_simple(struct cmd_simple *cmd) {
@@ -70,17 +74,35 @@ void execute_cmd_simple(struct cmd_simple *cmd) {
 		return;
 	}
 
-	int pid = fork();
+	(*cmd).pid = fork();
 	
-	if(pid == 0) {
-		_branch_cmd_simple(cmd);
-	}
-	
-
+	// Background process?	
 	if((*cmd).bg == 0) {
+		if((*cmd).pid == 0) {
+			_branch_cmd_simple(cmd);
+		}
+
 		int status;
-		waitpid(pid, &status, 0);
+		waitpid((*cmd).pid, &status, 0);
+
 	} else {
+		
+		// Create stdin redirection mechanism	
+		int pipe_fd[2];
+		pipe(pipe_fd);
+
+		int read_fd = pipe_fd[0],
+		    write_fd = pipe_fd[1];
+		
+		if((*cmd).pid == 0) {
+			close(write_fd);
+			_overwrite_stdin(read_fd);
+			_branch_cmd_simple(cmd);
+
+		}
+
+		(*cmd).write_fd = write_fd;
+
 
 		// Add pid to current jobs list
 		int index = add_job(*cmd);
@@ -90,31 +112,21 @@ void execute_cmd_simple(struct cmd_simple *cmd) {
 			return;
 		}
 
-		// On job die, remove it
+		// On job die, remove it from job list
 		// We have a special thread that waits just for this job.
 		// This has to be a thread and not a process because it
 		// modifies OUR jobs array.
 		
 		// The arguments must be heap-allocated, since we aren't bound to this stack anymore
-		struct _waiting_thread_args *args = (struct _waiting_thread_args*) malloc(sizeof(struct _waiting_thread_args));
-		(*args).pid = pid;
-		(*args).cmd = *cmd;
+		struct cmd_simple *cmd_heap = (struct cmd_simple*) malloc(sizeof(struct cmd_simple));
+		(*cmd_heap) = *cmd;
 
 		pthread_t thread;
-		pthread_create(&thread, 0, &_spawn_waiting_thread, (void*) args);
+		pthread_create(&thread, 0, &_spawn_waiting_thread, (void*) cmd_heap);
 		pthread_detach(thread);
 	}
 }
 
-void _overwrite_stdout(int fd) {
-	close(1);
-	dup(fd);
-}
-
-void _overwrite_stdin(int fd) {
-	close(0);
-	dup(fd);
-}
 
 void execute_cmd_pipe(struct cmd_compound *cmd) {
 	int pipefd[2];
@@ -144,17 +156,16 @@ void execute_cmd_pipe(struct cmd_compound *cmd) {
 			close(pipefd[1]);
 
 			int status;
-
-			// Once the first process ends, kill the second
+	
+			// Bug-prone?
 			waitpid(pid1, &status, 0);
-			// kill(pid2, SIGTERM);
 			waitpid(pid2, &status, 0);
 
-			close(0);
-			dup(old_stdin);
+			// close(0);
+			// dup(old_stdin);
 			
-			close(1);
-			dup(old_stdout);
+			// close(1);
+			// dup(old_stdout);
 		}
 	}
 }

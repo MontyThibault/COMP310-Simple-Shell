@@ -9,6 +9,12 @@ struct cmd_simple {
 	char args[ARG_ARRAY_LENGTH][ARG_BUFFER_SIZE];
 	int len;
 	int bg;
+	
+	// Process id
+	int pid;
+
+	// Writable file descriptor into the process
+	int write_fd;
 };
 
 struct cmd_compound {

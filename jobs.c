@@ -1,6 +1,8 @@
 #include "jobs.h"
 #include <stdio.h>
 #include <string.h>
+#include <wait.h>
+#include <unistd.h>
 
 struct cmd_simple jobs_array[MAX_JOBS];
 
@@ -47,8 +49,22 @@ void print_jobs() {
 
 
 void foreground_job(int index) {
-	struct cmd_simple my_job = jobs_array[index];
-	remove_job_by_index(index);
-	add_job(my_job);
-	// How does this actually work?
+	if(index < 0 || index > job_counter) {
+		printf("Invalid job number");
+	}
+
+	struct cmd_simple cmd = jobs_array[index];
+
+	// Overwrite our stdin with the process' stdin
+	int old_stdin = dup(0);
+	close(0);
+
+	dup(cmd.write_fd);
+
+
+	waitpid(cmd.pid, 0, 0);
+
+	// Undo last comment
+	close(0);
+	dup(old_stdin);
 }

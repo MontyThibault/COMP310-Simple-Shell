@@ -38,13 +38,6 @@ void builtin_exit() {
 	exit(0);
 }
 
-void builtin_jobs() {
-	printf("jobs");
-}
-
-void builtin_fg() {
-	printf("fg");
-}
 
 int builtin_match_and_run(char *program_name, char *args[]) {
 	if(strcmp(program_name, "history") == 0) {
@@ -74,7 +67,7 @@ int builtin_match_and_run(char *program_name, char *args[]) {
 
 	if(strcmp(program_name, "fg") == 0) {
 		int job_number;
-		if(sscanf(args[1], "%d", &job_number) == 0)
+		if(args[1] == 0 || sscanf(args[1], "%d", &job_number) == 0)
 			printf("Invalid argument to fd");
 		else
 			foreground_job(job_number);
