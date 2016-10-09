@@ -9,3 +9,6 @@ parse.c - simple command input
 history.c - command history implementations
 jobs.c - implementation of `jobs` and `fg`
 builtin.c - implementations of builtin ocommands (cd, pwd, etc.)
+execute.c - branching and redirection depending on command type
+
+persist/ - program that hangs for 10 seconds (testing)
